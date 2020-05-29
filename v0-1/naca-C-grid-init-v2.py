@@ -165,7 +165,7 @@ dl = length / (tailmax-1) #don't change this position
 #stretching parameter range 0<=temp<=1.0
 # xb and xe were selected just to avoid division by zero
 xb = 1.0
-xe = 100.0
+xe = 5.0
 dls = (xe-xb) / (tailmax-1)
 for i in range(len(temp)):
     ii = len(temp)-1 - i #reverse direction
@@ -177,9 +177,9 @@ std_one = max(temp)
 for i in range(len(temp)):
     temp[i] = (temp[i]/std_one)*length + tail_pos_x 
 
-#df = pd.DataFrame( {"x":temp, "y":yt} )
-#filedebug="stretched-debug.csv"
-#df.to_csv(filedebug, index=False)
+df = pd.DataFrame( {"x":temp, "y":yt} )
+filedebug="stretched-debug.csv"
+df.to_csv(filedebug, index=False)
 
 #original tail loop
 for i in range( len(temp) ):
@@ -197,6 +197,7 @@ for i in range( len(xt) ):
 # xt + xnaca + xu
 # yt + ynaca + yu
 
+
 testline_x = np.concatenate( (xt[0:tailmax-1], \
                               xnaca, xu[1:tailmax]) )
 
@@ -207,9 +208,9 @@ print(len(testline_x))
 bound_nodes = len(testline_x)
 
 #Debug data
-#df = pd.DataFrame( {'x': testline_x.flatten(), 'y':testline_y.flatten()} )
-#filedebug = "line-debug.csv"
-#df.to_csv(filedebug, index=False)
+df = pd.DataFrame( {'x': testline_x.flatten(), 'y':testline_y.flatten()} )
+filedebug = "line-debug.csv"
+df.to_csv(filedebug, index=False)
 
 #tail-edge BC nodes index
 #very important for boundary condition setting
@@ -218,6 +219,7 @@ tail_bc_index = []
 i = 0
 while i < bound_nodes:
     if testline_x[i] == 1.0 and testline_y[i] == 0.0:
+        #print("Tail boundary index: ", i)
         tail_bc_index.append(i)
     i +=1
 
@@ -236,9 +238,9 @@ for i in range(len(xnaca)):
     semi_circle_x[i] = rad*np.cos( 1.5*np.pi - i*dseta ) + tail_pos_x
     semi_circle_y[i] = rad*np.sin( 1.5*np.pi - i*dseta ) + tail_pos_y 
 
-#df = pd.DataFrame({"x": semi_circle_x, "y": semi_circle_y})
-#filedebug = "semi_circle-debug.csv"
-#df.to_csv(filedebug, index=False)
+df = pd.DataFrame({"x": semi_circle_x, "y": semi_circle_y})
+filedebug = "semi_circle-debug.csv"
+df.to_csv(filedebug, index=False)
 
 #xt, xu, yt, yu
 #the outer boundary line x-coordinate = inner x-coordinate
@@ -307,16 +309,16 @@ for j in range(jmax):
     cl_low_y[j] = -j*dy + testline_y[0]
     cl_up_y[j] = j*dy  + testline_y[0]
 
-#df = pd.DataFrame( {"x": cl_low_x, "y": cl_low_y} )
-#filedebug = "cl_low_line_debug.csv"
-#df.to_csv(filedebug, index=False)
+df = pd.DataFrame( {"x": cl_low_x, "y": cl_low_y} )
+filedebug = "cl_low_line_debug.csv"
+df.to_csv(filedebug, index=False)
     
 tk = str(t)
 series = str( int(100*m) )+str( int(10.0*p) )+tk[2]+tk[3]
 nodes = str(tot_nodes)
 filename ="naca"+series+"-"+nodes.zfill(3)+"-C-grid-init.csv"
-#df = pd.DataFrame({'x':xnaca.flatten(), 'y':ynaca.flatten(), 'z':z.flatten()} )
-#df.to_csv(filename, index=False)
+df = pd.DataFrame({'x':xnaca.flatten(), 'y':ynaca.flatten(), 'z':z.flatten()} )
+df.to_csv(filename, index=False)
 
 xmin = -1.0
 xmax = 20.5

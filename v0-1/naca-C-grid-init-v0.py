@@ -98,8 +98,6 @@ print(xup)
 print()
 print(np.flip(xlow) )
 
-
-
 tot_nodes = 2*(imax-1) + 1
 
 xnaca = np.ndarray( (tot_nodes) ) #twice the length
@@ -126,20 +124,17 @@ for i in range(imax):
     xnaca[imax-1 + i] = xup[i]
     ynaca[imax-1 + i] = yup[i]
 
-#calibrate to tail edge reference point of (1.0, 0.0)
-xnaca[0] = 1.0
+#calibrate to zero
 ynaca[0] = 0.0
-
-xnaca[tot_nodes-1] = 1.0
 ynaca[tot_nodes-1] = 0.0
     
 z = np.zeros_like(xnaca)
 
+
 #Tail grid BC
 #The tail edge zone total nodes can be increased
 #in this setting tailmax = 2*imax
-coeff = 1.5
-tailmax = int(coeff*imax)
+tailmax = int(2*imax)
 
 #xt = np.ndarray( (imax) )
 #yt = np.ndarray( (imax) )
@@ -151,39 +146,16 @@ xu = np.zeros_like(xt)
 yu = np.zeros_like(yt)
 
 #temp = np.ndarray((imax))
-#temp = np.ndarray( (tailmax) )
-temp = np.ndarray( (len(xt)) )
+temp = np.ndarray( (tailmax) )
 
 tail_pos_x = xnaca[0]
 tail_pos_y = ynaca[0]
 dom_end = 20.0*c
 length = dom_end - tail_pos_x
-dl = length / (tailmax-1) #don't change this position    
 
-
-#test sanity
-#stretching parameter range 0<=temp<=1.0
-# xb and xe were selected just to avoid division by zero
-xb = 1.0
-xe = 100.0
-dls = (xe-xb) / (tailmax-1)
-for i in range(len(temp)):
-    ii = len(temp)-1 - i #reverse direction
-    temp[i] =  np.log( (xe/xb)/( (ii*dls+xb)/ xb )  ) 
-    yt[i] = 0.0
-
-#stdize
-std_one = max(temp)
-for i in range(len(temp)):
-    temp[i] = (temp[i]/std_one)*length + tail_pos_x 
-
-#df = pd.DataFrame( {"x":temp, "y":yt} )
-#filedebug="stretched-debug.csv"
-#df.to_csv(filedebug, index=False)
-
-#original tail loop
+dl = length / (tailmax-1)
 for i in range( len(temp) ):
-    #temp[i] = i*dl + tail_pos_x #uniform distribution
+    temp[i] = i*dl + tail_pos_x
     yt[i] = 0.0
 
 xt = np.flip(temp)
@@ -207,22 +179,9 @@ print(len(testline_x))
 bound_nodes = len(testline_x)
 
 #Debug data
-#df = pd.DataFrame( {'x': testline_x.flatten(), 'y':testline_y.flatten()} )
-#filedebug = "line-debug.csv"
-#df.to_csv(filedebug, index=False)
-
-#tail-edge BC nodes index
-#very important for boundary condition setting
-#use list for the index
-tail_bc_index = []
-i = 0
-while i < bound_nodes:
-    if testline_x[i] == 1.0 and testline_y[i] == 0.0:
-        tail_bc_index.append(i)
-    i +=1
-
-print(tail_bc_index)
-
+df = pd.DataFrame( {'x': testline_x.flatten(), 'y':testline_y.flatten()} )
+filedebug = "line-debug.csv"
+df.to_csv(filedebug, index=False)
 
 #outer boundary
 print(len(xnaca), len(ynaca))
@@ -236,9 +195,9 @@ for i in range(len(xnaca)):
     semi_circle_x[i] = rad*np.cos( 1.5*np.pi - i*dseta ) + tail_pos_x
     semi_circle_y[i] = rad*np.sin( 1.5*np.pi - i*dseta ) + tail_pos_y 
 
-#df = pd.DataFrame({"x": semi_circle_x, "y": semi_circle_y})
-#filedebug = "semi_circle-debug.csv"
-#df.to_csv(filedebug, index=False)
+df = pd.DataFrame({"x": semi_circle_x, "y": semi_circle_y})
+filedebug = "semi_circle-debug.csv"
+df.to_csv(filedebug, index=False)
 
 #xt, xu, yt, yu
 #the outer boundary line x-coordinate = inner x-coordinate
@@ -280,12 +239,6 @@ if sanity == 0:
 # i-index range: 0<= i <= bound_nodes-1
 #temporary jmax = bound_nodes
 jmax = int( 0.25*bound_nodes )
-print("Default jmax: ", jmax)
-ans = input("Change default value? y/n ")
-if ans == 'y':
-    jmax = int( input("Enter jmax ") )
-else:
-    print("using default jmax: ", jmax)
 
 print("xi-axis total nodes: ", bound_nodes)
 print("eta-axis total nodes: ", jmax)
@@ -307,84 +260,28 @@ for j in range(jmax):
     cl_low_y[j] = -j*dy + testline_y[0]
     cl_up_y[j] = j*dy  + testline_y[0]
 
-#df = pd.DataFrame( {"x": cl_low_x, "y": cl_low_y} )
-#filedebug = "cl_low_line_debug.csv"
-#df.to_csv(filedebug, index=False)
+df = pd.DataFrame( {"x": cl_low_x, "y": cl_low_y} )
+filedebug = "cl_low_line_debug.csv"
+df.to_csv(filedebug, index=False)
     
 tk = str(t)
 series = str( int(100*m) )+str( int(10.0*p) )+tk[2]+tk[3]
 nodes = str(tot_nodes)
 filename ="naca"+series+"-"+nodes.zfill(3)+"-C-grid-init.csv"
-#df = pd.DataFrame({'x':xnaca.flatten(), 'y':ynaca.flatten(), 'z':z.flatten()} )
-#df.to_csv(filename, index=False)
+df = pd.DataFrame({'x':xnaca.flatten(), 'y':ynaca.flatten(), 'z':z.flatten()} )
+df.to_csv(filename, index=False)
 
 xmin = -1.0
 xmax = 20.5
 ymin = -0.3
 ymax = 0.3
-
 #plt.axis( (xmin, xmax, ymin, ymax) )
 #plt.plot( xnaca.flatten(), ynaca.flatten(), 'bo-')
+plt.plot( testline_x.flatten(), testline_y.flatten(), 'bo')
+plt.plot( semi_circle_x.flatten(), semi_circle_y.flatten(), 'bv')
+plt.plot( outer_x_line.flatten(), outer_y_line.flatten(), 'rv')
 
-plt.plot( testline_x.flatten(), testline_y.flatten(), 'bo-')
-
-#plt.plot( semi_circle_x.flatten(), semi_circle_y.flatten(), 'k-')
-
-plt.plot( outer_x_line.flatten(), outer_y_line.flatten(), 'ro-')
-
-plt.plot( cl_low_x.flatten(), cl_low_y.flatten(),  'ko-')
-plt.plot( cl_up_x.flatten(), cl_up_y.flatten(),  'ko-')
+plt.plot( cl_low_x.flatten(), cl_low_y.flatten(),  'bv')
+plt.plot( cl_up_x.flatten(), cl_up_y.flatten(),  'rv')
 
 plt.show()
-
-#final output requires (testline_x, testline_y) -> inner boundary
-#and (outer_x_line, outer_y_line) ->outer boundary.
-#the in-between output can be use just as a reference or for elliptic PDE
-#initial condition.
-# closure line (cl_low_x, cl_low_y)
-# closure line (cl_up_x, cl_up_y)
-
-#xi =bound_nodes
-#eta =jmax
-
-x2d = np.ndarray( (bound_nodes, jmax) )
-y2d = np.ndarray( (bound_nodes, jmax) )
-
-#data sanity check
-x2d[:][:] = 0.5
-y2d[:][:] = 0.0
-
-for i in range(bound_nodes):
-    j = 0
-    x2d[i][j] = testline_x[i]
-    y2d[i][j] = testline_y[i]
-
-    j = jmax-1
-    x2d[i][j] = outer_x_line[i]
-    y2d[i][j] = outer_y_line[i]
-
-for j in range(jmax):
-    i = 0
-    x2d[i][j] = cl_low_x[j]
-    y2d[i][j] = cl_low_y[j]
-
-    i = bound_nodes-1
-    x2d[i][j] = cl_up_x[j]
-    y2d[i][j] = cl_up_y[j]
-
-df = pd.DataFrame( {"x": x2d.flatten(), "y": y2d.flatten() } )
-str_imax = str(bound_nodes)
-str_jmax = str(jmax)
-str_tail_1 = str(tail_bc_index[0])
-str_tail_2 = str(tail_bc_index[1])
-
-#stdizing
-str_imax = str_imax.zfill(3)
-str_jmax = str_jmax.zfill(3)
-str_tail_1 = str_tail_1.zfill(3)
-str_tail_2 = str_tail_2.zfill(3)
-
-fileout = "naca"+series_number+"-"+str_imax+"-"+str_jmax+"-" \
-          +str_tail_1+"-"+str_tail_2+ "-input.csv"
-
-df.to_csv(fileout, index=False)

@@ -47,9 +47,8 @@ ycenter = 0.0
 #edge, and then add the difference to other nodes.
 angle = 0.0 #degree
 angle = (angle*np.pi)/180.0 #convert to rad
-x_r = 0.5
+x_r = 1.0
 y_r = 0.0
-
 for i in range(rmax):
     j = 0
     # data on airfoil surface
@@ -57,31 +56,18 @@ for i in range(rmax):
     xg[i][j] =  airfoil[i][0]
     yg[i][j] =  airfoil[i][1]
 
-    #check for this part
-    #j = 1
-    #xg[i][j] =  (inner + j*dr)*np.cos( -i*dseta) + xcenter
-    #yg[i][j] =  (inner + j*dr)*np.sin( -i*dseta) + ycenter
+    #This was a mistake!
+    xg[i][j] = (xg[i][j] - x_r)*np.cos(angle) - (yg[i][j] - y_r)*np.sin(angle) + x_r  
+    yg[i][j] = (yg[i][j] - y_r)*np.cos(angle) -(xg[i][j] - x_r)*np.sin(angle) + y_r
+    
+    j = 1
+    xg[i][j] =  (inner + j*dr)*np.cos( -i*dseta) + xcenter
+    yg[i][j] =  (inner + j*dr)*np.sin( -i*dseta) + ycenter
     
     j = etamax-1
     xg[i][j] = (inner + j*dr)*np.cos( -i*dseta) + xcenter
     yg[i][j] = (inner + j*dr)*np.sin( -i*dseta) + ycenter
 
-#Rotation for attack angle: not 100% sure yet
-for i in range(rmax):
-    #Calculating vector trajectory for rotation, rotation center (x_r, y_r)
-    # Note that due to surface node generation technique, some calculations
-    # can be simplified. Leading edge coordinate is (0.0, 0.0)
-    # i.e. (x_l, y_l) = (0.0,0.0) => (a1, a2) is the new pos. for leading edge
-    #Now every nodes on the surface should follow the same trajectory.
-    # trajectory = ( ( a1 - x_l), (a2 - y_l) ). Thus the new coordinate for every surface
-    #nodes should be xn = xold + (a1 - x_l), yn = yold + (a2-y_l)
-    j = 0
-    a1 =  (0.0 - x_r)*np.cos(angle)  +  (0.0 - y_r)*np.sin(angle) + x_r
-    a2 = ( 0.0 - y_r)*np.cos(angle) - ( 0.0 - x_r)*np.sin(angle) + y_r
-    xg[i][j] = xg[i][j] + (a1 - 0.0)
-    yg[i][j] = yg[i][j] + (a2 - 0.0)
-    
-    
 print(xg[0][0], xg[rmax-1][0])
     
 for j in range(1, etamax):

@@ -49,8 +49,8 @@ t = t + t34
 
 dx = c / (imax -1)
 #x-values can be stretched; focus distribution on either end
-A = -1.0 # A >= 0.0 will get the uniform distribution
-xc = 1.0 # xc: the concentration point
+A = 5.0 # A >= 0.0 will get the uniform distribution
+xc = 0.9 # xc: the concentration point
 
 for i in range(imax):
     x[i] = c*(i*dx) + A*(xc - c*(i*dx) )*(1.0 - (i*dx) )*(i*dx)
