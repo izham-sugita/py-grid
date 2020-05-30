@@ -2,10 +2,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-#read NACA0012 data file
+#read NACA0012 data file.
+#The data file is generated from naca-C-grid-init.py
+#The file naming format is:
+# nacaXXXX-XXX-XXX-XXX-XXX-input.csv
+# 1. The first XXXX : NACA 4-series airfoil number
+# 2. The second XXX: The total nodes for xi-axis
+# 3. The third XXX: The total nodes for eta-axis
+# 4. The fourth XXX: The index number of the node at tail edge 1 : under
+# 5. The fifth XXX: The index number of the node at tail edge 2 : over
+
 filename = "naca0012-101-101-030-070-input.csv"
-#filename = "naca0012-501-125-150-350-input.csv"
-#filename = "naca0012-501-051-150-350-input.csv"
 dat = pd.read_csv(filename)
 naca = pd.DataFrame(dat)
 airfoil = naca.to_numpy()
@@ -29,8 +36,9 @@ print(imax, jmax, itail_1, itail_2)
 
 #for drawing reference
 all_nodes = len(airfoil)
-print("Total nodes in xi-axis")
+print("Total nodes for the C-grid:")
 print(all_nodes,"\n")
+
 
 xg = np.ndarray((imax*jmax))
 yg = np.ndarray((imax*jmax))
@@ -39,14 +47,9 @@ for i in range(imax*jmax):
     xg[i] = airfoil[i][0]
     yg[i] = airfoil[i][1]
 
-#print(xg, yg)
 
 xg = xg.reshape((imax, jmax))
 yg = yg.reshape((imax, jmax))
-
-#for i in range(imax):
-#    j = 0
-#    print(xg[i][j], yg[i][j])
 
 #inner boundary plot    
 inner_x = np.ndarray((imax))
@@ -89,8 +92,9 @@ itermax = 5000
 iter = 0
 steps = 100
 
-A = 0.2
-B = 0.2
+#Heuristic; but >0.1 is the common practice for numerical stability.
+A = 0.001
+B = 0.001
 
 tail1 = tail_edge[0]
 tail2 = tail_edge[1]
@@ -160,14 +164,14 @@ while iter<itermax:
             print("Solution converged at %d iteration"%(iter) )
             break
 
-        #print out file
-        #pandas!!!
-        #if iter%steps == 0:
-        #    print(iter, errx, erry)
-        #    num = str(iter)
-        #    filename = "./data/naca-C-grid-pb"+num.zfill(5)+".csv"
-        #    df = pd.DataFrame({'x': xgn.flatten(), 'y': ygn.flatten(), 'z': zg.flatten() } )
-            #df.to_csv(filename, index=False)
+        #print out file, change to True if you want to keep frame data
+        if False:
+            if iter%steps == 0:
+                print(iter, errx, erry)
+                num = str(iter)
+                filename = "./data/naca-C-grid-pb"+num.zfill(5)+".csv"
+                df = pd.DataFrame({'x': xgn.flatten(), 'y': ygn.flatten(), 'z': zg.flatten() } )
+                df.to_csv(filename, index=False)
 
     #update
     xg[:][:] = xgn[:][:]
@@ -177,10 +181,7 @@ while iter<itermax:
 
 
 print("Output file")
-#pandas!!!
-#filename ="naca0012-101-101-030-070-input.csv"
-#filename = "naca0012-501-125-150-350-input.csv"
-fileout = filename[0:24]+"-C-grid.csv" 
+fileout = filename[0:24]+"-para-C-grid.csv" 
 df = pd.DataFrame({'x': xgn.flatten(), 'y': ygn.flatten(), 'z': zg.flatten() } )
 df.to_csv(fileout, index=False)
 
