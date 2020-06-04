@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 #filename = "naca0012-501-125-150-350-input.csv"
 #filename="naca0012-207-051-083-123-input.csv"
 filename = "naca0012-101-025-030-070-input.csv"
-#filename = "naca0012-101-301-030-070-input.csv"
+
 dat = pd.read_csv(filename)
 naca = pd.DataFrame(dat)
 airfoil = naca.to_numpy()
@@ -41,14 +41,8 @@ for i in range(imax*jmax):
     xg[i] = airfoil[i][0]
     yg[i] = airfoil[i][1]
 
-#print(xg, yg)
-
 xg = xg.reshape((imax, jmax))
 yg = yg.reshape((imax, jmax))
-
-#for i in range(imax):
-#    j = 0
-#    print(xg[i][j], yg[i][j])
 
 #inner boundary plot    
 inner_x = np.ndarray((imax))
@@ -95,8 +89,8 @@ itermax = 2*jmax + 1
 iter = 0
 steps = 100
 
-A = 0.005
-B = 0.005
+A = 0.001
+B = 0.001
 
 tail1 = tail_edge[0]
 tail2 = tail_edge[1]
@@ -192,7 +186,7 @@ print("Solving elliptic equation with source term P0, Q0")
 #using elliptic equation as smoothing
 iter = 0
 steps = 100
-itermax = 3001
+itermax = 1500
 omega = 0.5
 tol = 1.0e-4
 
@@ -228,7 +222,7 @@ while iter < itermax:
         y_xi = 0.5*( yg[i+1][j] - yg[i-1][j] )
         c = x_xi**2 + y_xi**2 
 
-        sn = 0.01 #set small mesh size at solid boundary
+        sn = 0.1 #set small mesh size at solid boundary
         x_eta = sn * ( - y_xi ) / np.sqrt( c )
         y_eta = sn * ( x_xi ) / np.sqrt( c )
 
@@ -252,13 +246,15 @@ while iter < itermax:
         q0_n[i] = q0[i] + wq* ( J*( -y_xi*R1 + x_xi*R2 ) - q0[i] )
 
         #outer boundary control function
+        #j=jmax-1 #real outer boundary
+
         j=jmax-1
         x_xi = 0.5*( xg[i+1][j] - xg[i-1][j] )
         y_xi = 0.5*( yg[i+1][j] - yg[i-1][j] )
         c = x_xi**2 + y_xi**2 
 
-        sn = 5.0 #set small mesh size at solid boundary
-        x_eta = sn * ( - y_xi ) / np.sqrt( c )
+        sn = 1.0 #set bigger mesh size at outer boundary
+        x_eta = sn * (  -y_xi ) / np.sqrt( c ) 
         y_eta = sn * ( x_xi ) / np.sqrt( c )
 
         J = 1.0/( x_xi*y_eta - x_eta*y_xi )
@@ -295,8 +291,8 @@ while iter < itermax:
     
     #elliptic main loop
     for i in range(1, imax-1):
-        for j in range(1, jmax-1):
-            
+        for j in range(1, jmax-1): #originally j
+                
             x_eta = 0.5*(xg[i][j+1]-xg[i][j-1])
             x_r = 0.5*(xg[i+1][j]-xg[i-1][j])
             y_eta = 0.5*(yg[i][j+1] - yg[i][j-1])
@@ -306,11 +302,6 @@ while iter < itermax:
             x_eta2 = (xg[i][j+1]  + xg[i][j-1])
             y_r2 = ( yg[i+1][j]  + yg[i-1][j] ) 
             y_eta2 = ( yg[i][j+1]  + yg[i][j-1] )
-            
-            #d2x_dxi2 = (xg[i+1][j] -2.0*xg[i][j] + xg[i-1][j])
-            #d2x_deta2 = (xg[i][j+1] -2.0*xg[i][j]  + xg[i][j-1])
-            #d2y_dxi2 = ( yg[i+1][j] -2.0*yg[i][j]  + yg[i-1][j] )
-            #d2y_deta2 = ( yg[i][j+1] -2.0*yg[i][j]  + yg[i][j-1] )
 
             x_reta = 0.25*(xg[i+1][j+1] - xg[i+1][j-1] - xg[i-1][j+1] + xg[i-1][j-1] )
             y_reta = 0.25*(yg[i+1][j+1] - yg[i+1][j-1] - yg[i-1][j+1] + yg[i-1][j-1] )
@@ -329,9 +320,9 @@ while iter < itermax:
             #Sx = -J2*( p0_n[i]*np.exp(-a1*(j-0) )*x_r + q0_n[i]*np.exp(-a2*(j-0) )*x_eta )
             #Sy = -J2*( p0_n[i]*np.exp(-a1*(j-0) )*y_r + q0_n[i]*np.exp(-a2*(j-0) )*y_eta )
 
-            pp = p0_n[i]*np.exp( -a1*(j-0) ) + p1_n[i]*np.exp( -a1*(jmax-2 - j) )
-            qq = q0_n[i]*np.exp( -a2*(j-0) ) + q1_n[i]*np.exp( -a2*(jmax-2 - j) )
-            
+            pp = p0_n[i]*np.exp( -a1*(j-0) ) + p1_n[i]*np.exp( -a2*(jmax-1 - j) )
+            qq = q0_n[i]*np.exp( -a1*(j-0) ) + q1_n[i]*np.exp( -a2*(jmax-1 - j) )
+
             Sx = -J2*( pp*x_r + qq*x_eta )
             Sy = -J2*( pp*y_r + qq*y_eta )
             
@@ -370,16 +361,32 @@ while iter < itermax:
     if iter%steps == 0:
         print(iter, errx, erry)
         
-
+    
     #update all
     xg[:][:] = xgn[:][:]
     yg[:][:] = ygn[:][:]
-
-    #update outer boundary so that its moves with orthogonality
-    #for i in range(imax):
-    #    xg[i][jmax-1] = xgn[i][jmax-2]
-    #    yg[i][jmax-1] = ygn[i][jmax-2]
     
+
+    for j in range(1, jmax-1):
+        i = 0
+        yg[i][j] = yg[i+1][j]
+
+        i = imax-1
+        yg[i][j] = yg[i-1][j]
+            
+    #redistribute nodes at boundary
+    relax = 0.001
+    for i in range(1, imax-1):
+        j = jmax-1
+        x_xi = 0.5*(xgn[i+1][j] - xgn[i-1][j] )
+        x_eta = xgn[i][jmax-1] - xgn[i][jmax-2]
+        xg[i][jmax-1] = xg[i][jmax-1] + relax*(x_xi + x_eta)
+
+        y_xi = 0.5*(ygn[i+1][j] - ygn[i-1][j] )
+        y_eta = ygn[i][jmax-1] - ygn[i][jmax-2]
+        yg[i][jmax-1] = yg[i][jmax-1] + relax*(y_xi + y_eta)
+
+
     #update p0, q0
     p0[:] = p0_n[:]
     q0[:] = q0_n[:]
@@ -395,8 +402,6 @@ while iter < itermax:
 print("Output file")
 #pandas!!!
 fileout = filename[0:24]+"-C-grid-para-ellip.csv" 
-df = pd.DataFrame({'x': xgn.flatten(), 'y': ygn.flatten(), 'z': zg.flatten() } )
+df = pd.DataFrame({'x': xg.flatten(), 'y': yg.flatten(), 'z': zg.flatten() } )
 df.to_csv(fileout, index=False)
 
-df = pd.DataFrame( {"p0_n": p0_n.flatten(), "q0_n": q0_n.flatten() } )
-df.to_csv("source-debug.csv", index=False)
