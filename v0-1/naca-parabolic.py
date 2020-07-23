@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-etamax = 51
+etamax = 101
 rmax = 128
 
 #read NACA0012 data file

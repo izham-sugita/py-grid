@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -49,12 +50,32 @@ t = t + t34
 
 dx = c / (imax -1)
 #x-values can be stretched; focus distribution on either end
-A = 5.0 # A >= 0.0 will get the uniform distribution
-xc = 0.9 # xc: the concentration point
+A = 1.0 # A >= 0.0 will get the uniform distribution
+xc = -0.9 # xc: the concentration point
 
+#rvar = (j+1)*dr + r0
+#ratio = np.log( (rvar+eps) / r0 ) / np.log( (r1+eps)/r0 )
+alpha = 0.0
+beta = 4.0
 for i in range(imax):
-    x[i] = c*(i*dx) + A*(xc - c*(i*dx) )*(1.0 - (i*dx) )*(i*dx)
+    #x[i] = c*(i*dx) + A*(xc - c*(i*dx) )*(1.0 - (i*dx) )*(i*dx)
+    #x[i] = ( np.exp(i*dx) - 1.0 ) /abs( np.exp(c) - 1.0 )
+    #x[i] = -( np.exp(-i*dx) - 1.0 ) /abs( np.exp(-c) - 1.0 )
+    a1 = ( np.exp(beta*i*dx) - 1.0 ) /abs( np.exp(beta*c) - 1.0 )
+    a2 = -( np.exp(-beta*i*dx) - 1.0 ) /abs( np.exp(-beta*c) - 1.0 )
+    alpha = (i*dx)/c
+        
+    x[i] = (1.0 - alpha)*a1 + alpha*a2
 
+    if i>0:
+        print("dx=", x[i]-x[i-1])
+
+    
+ans = input("Continue? y/n ")
+if ans == 'n':
+    sys.exit("Program stop")
+else:
+    print("Continuing")
 
 #surface curve
 a0 = 0.2969
